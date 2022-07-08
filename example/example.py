@@ -14,48 +14,60 @@ import pyBumpHunter as BH
 
 import sys
 
-def bumpHunt():
+def bumpHunt(year):
     # Open the file
     with uproot.open("./data.root") as file:
         # Background
         bkg = file["bkg"].arrays(library="np")["bkg"]
 
         # Data
-        #data = file["data"].arrays(library="np")["data"]
+        data = file["data"].arrays(library="np")["data"]
 
         # Signal
         sig = file["sig"].arrays(library="np")["sig"]
         
-    with uproot.open("./data15_OnOffCalib.root") as file:
-        calib = file["hpx"].arrays(library="np")["hpx"]
+    with uproot.open(f"../../data/bat/merged/{year}/{year}_OnOffCalib.root") as file:
+        calib_hist = file["hpx"].to_numpy()
         
-        
-    print(bkg)
-    print(calib)
-    sys.exit()
-
     # Position of the bump in the data
     Lth = 5.5
 
     # Range for the histograms (same that the one used with C++ BumpHunter)
     rang = [0, 2000]
+    bins = [92,107,122,138,154,171,188,206,224,243,262,282,302,323,344,365,387,410,433,457,481,506,531,556,582,608,635,662,690,719,748,778,808,839,871,903,936,970,1004,1039,1075,1111,1148,1186,1225,1264,1304,1345,1387,1429,1472,1516,1561,1607,1654,1701,1749,1798,1848,1899,1951,2004,2058,2113,2169,2226,2284,2343,2403,2464,2526,2590,2655,2721,2788,2856,2926,2997,3069,3142,3217,3293,3371,3450,3530,3612,3695,3780,3866,3954,4043,4134,4227,4321,4417,4515,4614,4715,4818,4923,5030]
 
     # Plot the 2 distributions
     F = plt.figure(figsize=(12, 8))
-    plt.title("Test distribution")
-    plt.hist(
-        (bkg, data),
-        bins=400,
+    bkg_hist=plt.hist(
+        (bkg),
+        bins=bins,
         histtype="step",
-        range=rang,
-        label=("bakground", "data"),
+        label=("Background"),
         linewidth=2,
     )
-    plt.legend(fontsize='xx-large')
+    x=[]
+    bin_edges=bins
+    for i in range(1,len(bin_edges)):
+        bin_center = bin_edges[i-1]+((bin_edges[i]-bin_edges[i-1])/2)
+        x.append(bin_center)
+    bkg_x = x
+    bkg_y = bkg_hist[0]
+    data_x = x
+    data_y = bkg_hist[0]*calib_hist[0]
+    data_hist=plt.plot(
+        data_x,data_y,
+        label="Bkg * Calib",
+        linestyle='none',
+        markerSize=2,
+        marker="o",
+        color="red",
+    )
+    plt.legend(fontsize='xx-large',title=year)
     plt.xticks(fontsize='xx-large')
     plt.yticks(fontsize='xx-large')
-    plt.savefig("results/1D/hist.png", bbox_inches="tight")
+    plt.savefig(f"results/1D/{year}/hist.png", bbox_inches="tight")
     plt.close(F)
+    
 
     # Create a BumpHunter1D class instance
     hunter = BH.BumpHunter1D(
@@ -72,7 +84,9 @@ def bumpHunt():
     # Call the bump_scan method
     print("####bump_scan call####")
     begin = datetime.now()
-    hunter.bump_scan(data, bkg)
+    data = [data_x,data_y]
+    bkg = [bkg_x,bkg_y]
+    hunter.bump_scan(data,bkg)
     end = datetime.now()
     print(f"time={end - begin}")
     print("")
@@ -83,10 +97,10 @@ def bumpHunt():
     print("")
 
     # Get and save tomography plot
-    hunter.plot_tomography(data, filename="results/1D/tomography.png")
+    hunter.plot_tomography(data, filename=f"results/1D/{year}/tomography.png")
 
     # Get and save bump plot
-    hunter.plot_bump(data, bkg, filename="results/1D/bump.png")
+    hunter.plot_bump(data, bkg, filename=f"results/1D/{year}/bump.png",label=", "+year)
 
 ## Get and save statistics plot
 #hunter.plot_stat(show_Pval=True, filename="results/1D/BH_statistics.png")
@@ -113,7 +127,9 @@ def bumpHunt():
 #)
 
 def main():
-    bumpHunt()
+    years = ["data15","data16","data17","data18"]
+    for year in years:
+        bumpHunt(year)
 
 if __name__ == "__main__":
     main()

@@ -21,9 +21,9 @@ void gen_data(){
 	TRandom* G = new TRandom(42);
 
 	//Fill them
-	for(int i=0;i<1000000;i++){
-		data = G->Exp(400);
-		bkg = G->Exp(400);
+	for(int i=0;i<10000000;i++){
+		data = G->Exp(500);
+		bkg = G->Exp(500);
 		Btree->Fill();
 		Dtree->Fill();
 	}
