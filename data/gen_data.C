@@ -21,33 +21,19 @@ void gen_data(){
 	TRandom* G = new TRandom(42);
 
 	//Fill them
-	for(int i=0;i<100000;i++){
-		data = G->Exp(2);
-		bkg = G->Exp(2);
-		if(bkg<20.0){
-			Btree->Fill();
-		}
-		if(data<20.0){
-			Dtree->Fill();
-		}
+	for(int i=0;i<1000000;i++){
+		data = G->Exp(400);
+		bkg = G->Exp(400);
+		Btree->Fill();
+		Dtree->Fill();
 	}
-	/*for(int i=0;i<150;i++){
-		data = G->Gaus(5.5,0.35);
-		if(data<20.0){
-			Dtree->Fill();
-		}
-	}*/
 	for(int i=0;i<150;i++){
 		data = G->Gaus(5.5,0.35);
-		if(data<20.0){
-			Dtree->Fill();
-		}
+		Dtree->Fill();
 	}
 	for(int i=0;i<5000;i++){
 		sig = G->Gaus(5.5,0.35);
-		if(sig<20.0){
-			Stree->Fill();
-		}
+		Stree->Fill();
 	}
 
 
@@ -62,11 +48,11 @@ void gen_data(){
 	Ofile2->cd();
 
 	//Create histograms from the trees
-	TH1F* Hdata = new TH1F("data_dijet","data_dijet",60,0,20);
-	TH1F* Hbkg = new TH1F("bkg_dijet","bkg_dijet",60,0,20);
-	TH1F* Hsig = new TH1F("sig_dijet","bkg_dijet",60,0,20);
-	Dtree->Draw("data>>data_dijet(60,0,20)","");
-	Btree->Draw("bkg>>bkg_dijet(60,0,20)","");
+	TH1F* Hdata = new TH1F("data_dijet","data_dijet",400,0,2000);
+	TH1F* Hbkg = new TH1F("bkg_dijet","bkg_dijet",400,0,2000);
+	TH1F* Hsig = new TH1F("sig_dijet","bkg_dijet",400,0,2000);
+	Dtree->Draw("data>>data_dijet(400,0,2000)","");
+	Btree->Draw("bkg>>bkg_dijet(400,0,2000)","");
 	Stree->Draw("sig>>sig_dijet","");
 
 	//save them in new file

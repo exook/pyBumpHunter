@@ -12,92 +12,108 @@ import uproot  # # Used to read data from a root file
 
 import pyBumpHunter as BH
 
-# Open the file
-with uproot.open("../data/data.root") as file:
-    # Background
-    bkg = file["bkg"].arrays(library="np")["bkg"]
+import sys
 
-    # Data
-    data = file["data"].arrays(library="np")["data"]
+def bumpHunt():
+    # Open the file
+    with uproot.open("./data.root") as file:
+        # Background
+        bkg = file["bkg"].arrays(library="np")["bkg"]
 
-    # Signal
-    sig = file["sig"].arrays(library="np")["sig"]
+        # Data
+        #data = file["data"].arrays(library="np")["data"]
 
-# Position of the bump in the data
-Lth = 5.5
+        # Signal
+        sig = file["sig"].arrays(library="np")["sig"]
+        
+    with uproot.open("./data15_OnOffCalib.root") as file:
+        calib = file["hpx"].arrays(library="np")["hpx"]
+        
+        
+    print(bkg)
+    print(calib)
+    sys.exit()
 
-# Range for the histograms (same that the one used with C++ BumpHunter)
-rang = [0, 20]
+    # Position of the bump in the data
+    Lth = 5.5
 
-# Plot the 2 distributions
-F = plt.figure(figsize=(12, 8))
-plt.title("Test distribution")
-plt.hist(
-    (bkg, data),
-    bins=60,
-    histtype="step",
-    range=rang,
-    label=("bakground", "data"),
-    linewidth=2,
-)
-plt.legend(fontsize='xx-large')
-plt.xticks(fontsize='xx-large')
-plt.yticks(fontsize='xx-large')
-plt.savefig("results/1D/hist.png", bbox_inches="tight")
-plt.close(F)
+    # Range for the histograms (same that the one used with C++ BumpHunter)
+    rang = [0, 2000]
 
-# Create a BumpHunter1D class instance
-hunter = BH.BumpHunter1D(
-    rang=rang,
-    width_min=2,
-    width_max=6,
-    width_step=1,
-    scan_step=1,
-    npe=10000,
-    nworker=1,
-    seed=666,
-)
+    # Plot the 2 distributions
+    F = plt.figure(figsize=(12, 8))
+    plt.title("Test distribution")
+    plt.hist(
+        (bkg, data),
+        bins=400,
+        histtype="step",
+        range=rang,
+        label=("bakground", "data"),
+        linewidth=2,
+    )
+    plt.legend(fontsize='xx-large')
+    plt.xticks(fontsize='xx-large')
+    plt.yticks(fontsize='xx-large')
+    plt.savefig("results/1D/hist.png", bbox_inches="tight")
+    plt.close(F)
 
-# Call the bump_scan method
-print("####bump_scan call####")
-begin = datetime.now()
-hunter.bump_scan(data, bkg)
-end = datetime.now()
-print(f"time={end - begin}")
-print("")
+    # Create a BumpHunter1D class instance
+    hunter = BH.BumpHunter1D(
+        rang=rang,
+        width_min=2,
+        width_max=6,
+        width_step=1,
+        scan_step=1,
+        npe=10000,
+        nworker=1,
+        seed=666,
+    )
 
-# Print bump
-print(hunter.bump_info(data))
-print(f"   mean (true) = {Lth}")
-print("")
+    # Call the bump_scan method
+    print("####bump_scan call####")
+    begin = datetime.now()
+    hunter.bump_scan(data, bkg)
+    end = datetime.now()
+    print(f"time={end - begin}")
+    print("")
 
-# Get and save tomography plot
-hunter.plot_tomography(data, filename="results/1D/tomography.png")
+    # Print bump
+    print(hunter.bump_info(data))
+    print(f"   mean (true) = {Lth}")
+    print("")
 
-# Get and save bump plot
-hunter.plot_bump(data, bkg, filename="results/1D/bump.png")
+    # Get and save tomography plot
+    hunter.plot_tomography(data, filename="results/1D/tomography.png")
 
-# Get and save statistics plot
-hunter.plot_stat(show_Pval=True, filename="results/1D/BH_statistics.png")
+    # Get and save bump plot
+    hunter.plot_bump(data, bkg, filename="results/1D/bump.png")
 
-print("")
+## Get and save statistics plot
+#hunter.plot_stat(show_Pval=True, filename="results/1D/BH_statistics.png")
 
-# We have to set additionnal parameters specific to the signal injection.
-# All the parameters defined previously are kept.
-hunter.sigma_limit = 5
-hunter.str_min = -1  # if str_scale='log', the real starting value is 10**str_min
-hunter.str_scale = "log"
-hunter.signal_exp = 150  # Correspond the the real number of signal events generated when making the data
+#print("")
 
-print("####singal_inject call####")
-begin = datetime.now()
-hunter.signal_inject(sig, bkg, is_hist=False)
-end = datetime.now()
-print(f"time={end - begin}")
-print("")
+## We have to set additionnal parameters specific to the signal injection.
+## All the parameters defined previously are kept.
+#hunter.sigma_limit = 5
+#hunter.str_min = -1  # if str_scale='log', the real starting value is 10**str_min
+#hunter.str_scale = "log"
+#hunter.signal_exp = 150  # Correspond the the real number of signal events generated when making the data
 
-# Get and save the injection plot
-hunter.plot_inject(
-    filename=("results/1D/SignalInject.png", "results/1D/SignalInject_log.png")
-)
+#print("####singal_inject call####")
+#begin = datetime.now()
+#hunter.signal_inject(sig, bkg, is_hist=False)
+#end = datetime.now()
+#print(f"time={end - begin}")
+#print("")
 
+## Get and save the injection plot
+#hunter.plot_inject(
+#    filename=("results/1D/SignalInject.png", "results/1D/SignalInject_log.png")
+#)
+
+def main():
+    bumpHunt()
+
+if __name__ == "__main__":
+    main()
